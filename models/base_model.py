@@ -2,7 +2,7 @@ class BaseModel:
     """
     Базовый класс модели, определяющий интерфейс для всех моделей.
     """
-    def load_model(self, model_path: str):
+    def load_model(self, model_path: str, local: bool = False):
         """
         Загружает модель из заданного пути.
 

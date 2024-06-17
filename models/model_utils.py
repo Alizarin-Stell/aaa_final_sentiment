@@ -1,5 +1,4 @@
 from models.hugging_face_model import HuggingFaceModel
-from models.catboost_model import CatBoostModel
 
 
 class ModelHandler:
@@ -9,23 +8,23 @@ class ModelHandler:
 
     def __init__(self):
         self.model = None
+        self.default_labels = ["no emotion", "joy", "sadness", "surprise", "fear", "anger", "mean"]
 
-    def load_model(self, model_type, model_path):
+    def load_model(self, model_type, model_path, local=False):
         """
         Загружает модель указанного типа из заданного пути.
 
-        :param model_type: Тип модели (`huggingface` или `catboost`).
+        :param model_type: Тип модели (`huggingface`).
         :param model_path: Путь к модели.
+        :param local: Булевый флаг, указывающий на то, что модель загружается локально.
         :raise ValueError: Если указан неправильный тип модели.
         """
         if model_type == 'huggingface':
             self.model = HuggingFaceModel()
-        elif model_type == 'catboost':
-            self.model = CatBoostModel()
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
-        self.model.load_model(model_path)
+        self.model.load_model(model_path, local=local)
 
     def predict(self, data: list):
         """
@@ -50,4 +49,4 @@ class ModelHandler:
         if self.model is None:
             raise ValueError("No model loaded")
         predictions = self.predict(data)
-        return self.model.get_best_labels(predictions, labels)
+        return self.model.get_best_labels(predictions, labels = self.default_labels)

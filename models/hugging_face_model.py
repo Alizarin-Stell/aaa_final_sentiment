@@ -10,14 +10,19 @@ class HuggingFaceModel(BaseModel):
         self.tokenizer = None
         self.model = None
 
-    def load_model(self, model_path):
+    def load_model(self, model_path="bert_1", local=True):
         """
         Загружает модель и токенизатор Hugging Face из заданного пути.
 
         :param model_path: Строка, представляющая путь к модели.
+        :param local: Булевый флаг, указывающий на то, что модель загружается локально.
         """
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_path)
+        if local:
+            self.tokenizer = AutoTokenizer.from_pretrained(f'{model_path}_tok', local_files_only=True)
+            self.model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+            self.model = AutoModelForSequenceClassification.from_pretrained(model_path)
 
     def predict(self, texts):
         """

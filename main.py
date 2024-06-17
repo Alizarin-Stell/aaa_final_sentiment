@@ -20,13 +20,13 @@ class ModelLoadRequest(BaseModel):
     """
     model_type: str
     model_name: str
+    local: bool
 
 class LabelRequest(BaseModel):
     """
     Класс для ввода данных меток и текстов.
     """
     texts: List[str]
-    labels: List[str]
 
 @app.post("/predict/")
 async def predict(input_data: InputData):
@@ -43,44 +43,40 @@ async def predict(input_data: InputData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.post("/upload_model/")
 async def upload_model(model_type: str, file: UploadFile = File(...)):
     """
     Эндпоинт для загрузки модели из бинарного файла.
 
-    :param model_type: Тип модели (`huggingface` или `catboost`).
+    :param model_type: Тип модели (`huggingface`).
     :param file: Загрузить файл модели.
     :return: Сообщение о результате загрузки модели.
     :raise HTTPException: В случае ошибки.
     """
     try:
-        bin_file_path = f"uploaded_model.{file.filename.split('.')[-1]}"
+        bin_file_path = f"/tmp/uploaded_model_{file.filename}"
         with open(bin_file_path, "wb") as f:
             f.write(await file.read())
 
-        model_handler.load_model(model_type, bin_file_path)
+        model_handler.load_model(model_type, bin_file_path, local=True)
         return {"message": f"{model_type} model loaded successfully from binary file"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.post("/load_pretrained_model/")
 async def load_pretrained_model(request: ModelLoadRequest):
     """
-    Эндпоинт для загрузки предобученной модели.
+    Эндпоинт для загрузки предобученной модели или модели из локального пути.
 
-    :param request: Объект, содержащий тип модели и имя предобученной модели.
+    :param request: Объект, содержащий тип модели и имя предобученной модели или путь к локальной модели.
     :return: Сообщение о результате загрузки модели.
     :raise HTTPException: В случае ошибки.
     """
     try:
-        model_handler.load_model(request.model_type, request.model_name)
-        return {
-            "message": f"Pretrained model '{request.model_name}' of type '{request.model_type}' loaded successfully"}
+        model_handler.load_model(request.model_type, request.model_name, request.local)
+        return {"message": f"Model '{request.model_name}' of type '{request.model_type}' loaded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/labels/")
 async def labels(label_request: LabelRequest):
@@ -92,11 +88,10 @@ async def labels(label_request: LabelRequest):
     :raise HTTPException: В случае ошибки.
     """
     try:
-        best_labels = model_handler.get_best_labels(label_request.texts, label_request.labels)
+        best_labels = model_handler.get_best_labels(label_request.texts)
         return {"labels": best_labels}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 if __name__ == "__main__":
     import uvicorn
