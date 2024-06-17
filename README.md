@@ -38,7 +38,7 @@ Response:
 Request:
 {
     "model_type": "huggingface",
-    "model_name": "cointegrated/rubert-tiny2-cedr-emotion-detection" / "bert_1", 
+    "model_name": "cointegrated/rubert-tiny2-cedr-emotion-detection" / "app/bert_1", 
     "local": true
 }
 
